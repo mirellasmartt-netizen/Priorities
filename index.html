@@ -245,13 +245,13 @@ body{font-family:var(--font);background:var(--rdc-gray);color:var(--rdc-text);mi
 .note-edit-area{width:100%;padding:8px 10px;font-size:0.84rem;font-family:var(--font);border:1px solid var(--rdc-gray2);border-radius:var(--radius);background:var(--rdc-gray);color:var(--rdc-text);outline:none;resize:vertical;min-height:80px;line-height:1.5;display:none;}
 .add-note-row{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px dashed var(--rdc-gray3);border-radius:var(--radius);background:var(--rdc-gray);}
 .add-note-title-input{width:100%;padding:6px 8px;font-size:0.78rem;font-family:var(--mono);border:1px solid var(--rdc-gray2);border-radius:var(--radius);background:var(--rdc-white);color:var(--rdc-text);outline:none;}
-.toast-wrap{display:none;margin:0 auto;max-width:900px;padding:0 40px 12px;}
+.toast-wrap{display:none;margin:0 auto;max-width:900px;padding:0 40px 20px;}
 .toast-wrap.show{display:block;}
-.toast{background:var(--rdc-navy);color:#fff;padding:11px 16px;border-radius:var(--radius);font-size:0.8rem;font-family:var(--mono);display:flex;align-items:center;gap:12px;border-left:3px solid var(--rdc-red);position:relative;overflow:hidden;}
-.toast-msg{flex:1;color:#fff;}
-.toast-undo{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:6px;padding:4px 12px;font-size:0.72rem;font-family:var(--mono);cursor:pointer;white-space:nowrap;flex-shrink:0;}
-.toast-undo:hover{background:rgba(255,255,255,0.25);}
-.toast-bar{height:3px;background:var(--rdc-red);border-radius:0;position:absolute;bottom:0;left:0;width:100%;}
+.toast{background:var(--rdc-navy);color:#fff;padding:14px 18px 20px;border-radius:var(--radius);font-family:var(--mono);display:grid;grid-template-columns:1fr auto;grid-template-rows:auto 3px;gap:10px 16px;align-items:center;position:relative;overflow:hidden;}
+.toast-msg{font-size:0.82rem;color:#fff;line-height:1.4;word-break:break-word;}
+.toast-undo{background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:6px;padding:7px 20px;font-size:0.78rem;font-family:var(--mono);cursor:pointer;white-space:nowrap;justify-self:end;}
+.toast-undo:hover{background:rgba(255,255,255,0.28);}
+.toast-bar{grid-column:1/-1;height:3px;background:var(--rdc-red);border-radius:2px;width:100%;}
 </style>
 </head>
 <body>
@@ -650,7 +650,7 @@ function toggleDone(id,cb,pfx){
   var barEl=document.getElementById('toastBar');
   var undoBtn=document.getElementById('toastUndo');
 
-  showToast((isDone?'Completed: ':'Unchecked: ')+title.slice(0,44)+(title.length>44?'...':''), true);
+  showToast((isDone?'Completed: ':'Unchecked: ')+title, true);
 
   if(barEl)barEl.style.width='100%';
   if(undoBtn)undoBtn.style.display='block';
