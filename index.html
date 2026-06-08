@@ -140,8 +140,7 @@ body{font-family:var(--font);background:var(--rdc-gray);color:var(--rdc-text);mi
 .slack-btn:hover{border-color:var(--src-slack-c);color:var(--src-slack-c);background:var(--src-slack-bg);}
 
 /* toast */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--rdc-navy);color:#fff;padding:11px 16px;border-radius:var(--radius);font-size:0.78rem;font-family:var(--mono);box-shadow:var(--shadow-md);z-index:300;transform:translateY(16px);opacity:0;transition:all 0.2s;pointer-events:none;max-width:360px;line-height:1.5;}
-.toast.show{transform:translateY(0);opacity:1;}
+
 
 /* day view */
 .day-card{background:var(--rdc-white);border:1px solid var(--rdc-gray2);border-radius:var(--radius);margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden;}
@@ -246,21 +245,18 @@ body{font-family:var(--font);background:var(--rdc-gray);color:var(--rdc-text);mi
 .note-edit-area{width:100%;padding:8px 10px;font-size:0.84rem;font-family:var(--font);border:1px solid var(--rdc-gray2);border-radius:var(--radius);background:var(--rdc-gray);color:var(--rdc-text);outline:none;resize:vertical;min-height:80px;line-height:1.5;display:none;}
 .add-note-row{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px dashed var(--rdc-gray3);border-radius:var(--radius);background:var(--rdc-gray);}
 .add-note-title-input{width:100%;padding:6px 8px;font-size:0.78rem;font-family:var(--mono);border:1px solid var(--rdc-gray2);border-radius:var(--radius);background:var(--rdc-white);color:var(--rdc-text);outline:none;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--rdc-navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:0.78rem;font-family:var(--mono);display:none;border-left:3px solid var(--rdc-red);box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:999;white-space:nowrap;opacity:0;transition:opacity 0.18s,transform 0.18s;}
-.toast.show{display:flex;align-items:center;gap:10px;opacity:1;transform:translateX(-50%) translateY(0);}
-.toast-msg{flex:1;}
-.toast-undo{background:none;border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:6px;padding:3px 10px;font-size:0.72rem;font-family:var(--mono);cursor:pointer;transition:background 0.12s;white-space:nowrap;}
-.toast-undo:hover{background:rgba(255,255,255,0.15);}
-.toast-bar{height:2px;background:var(--rdc-red);border-radius:1px;position:absolute;bottom:0;left:0;transition:width linear;}
+.toast-wrap{display:none;margin:0 auto;max-width:900px;padding:0 40px 12px;}
+.toast-wrap.show{display:block;}
+.toast{background:var(--rdc-navy);color:#fff;padding:11px 16px;border-radius:var(--radius);font-size:0.8rem;font-family:var(--mono);display:flex;align-items:center;gap:12px;border-left:3px solid var(--rdc-red);position:relative;overflow:hidden;}
+.toast-msg{flex:1;color:#fff;}
+.toast-undo{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:6px;padding:4px 12px;font-size:0.72rem;font-family:var(--mono);cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.toast-undo:hover{background:rgba(255,255,255,0.25);}
+.toast-bar{height:3px;background:var(--rdc-red);border-radius:0;position:absolute;bottom:0;left:0;width:100%;}
 </style>
 </head>
 <body>
 
-<div class="toast" id="toast" role="status" aria-live="polite">
-  <span class="toast-msg" id="toastMsg"></span>
-  <button class="toast-undo" id="toastUndo" onclick="doUndo()" style="display:none">Undo</button>
-  <div class="toast-bar" id="toastBar" style="width:100%"></div>
-</div>
+
 
 <div class="site-header">
   <div>
@@ -696,18 +692,20 @@ function commitUndo(){
 }
 
 function showToast(msg,withUndo){
-  var el=document.getElementById('toast');
+  var wrap=document.getElementById('toastWrap');
   var msgEl=document.getElementById('toastMsg');
   var undoBtn=document.getElementById('toastUndo');
-  if(!el)return;
+  if(!wrap)return;
   if(msgEl)msgEl.textContent=msg;
-  if(undoBtn)undoBtn.style.display=withUndo?'block':'none';
-  el.className='toast show';
+  if(undoBtn)undoBtn.style.display=withUndo?'inline-block':'none';
+  wrap.className='toast-wrap show';
+  // Scroll toast into view
+  wrap.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 function hideToast(){
-  var el=document.getElementById('toast');
-  if(el)el.className='toast';
+  var wrap=document.getElementById('toastWrap');
+  if(wrap)wrap.className='toast-wrap';
 }
 function togPri(id,sid){const s=document.getElementById(sid+'-'+id);if(s)s.style.display=s.style.display==='block'?'none':'block';}
 function chgPri(id,val){tp[id]=val;const utask=ut.find(t=>t.id===id);if(utask)utask.priority=val;document.getElementById('wps-'+id).style.display='none';save();renderWeekly();}
@@ -875,5 +873,13 @@ buildFilters();
 renderAll();
 renderNotes();
 </script>
+
+<div class="toast-wrap" id="toastWrap">
+  <div class="toast" id="toast">
+    <span class="toast-msg" id="toastMsg"></span>
+    <button class="toast-undo" id="toastUndo" onclick="doUndo()">Undo</button>
+    <div class="toast-bar" id="toastBar"></div>
+  </div>
+</div>
 </body>
 </html>
