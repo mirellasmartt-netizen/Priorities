@@ -76,7 +76,18 @@ body{font-family:var(--font);background:var(--rdc-gray);color:var(--rdc-text);mi
 .task-block{margin-bottom:2rem;}
 .task{display:flex;border-radius:var(--radius);border:1px solid var(--rdc-gray2);background:var(--rdc-white);margin-bottom:6px;transition:border-color 0.15s,box-shadow 0.15s;box-shadow:var(--shadow);overflow:hidden;}
 .task:hover{border-color:var(--rdc-gray3);box-shadow:var(--shadow-md);}
-.task.done-task{opacity:0.4;}
+.task.done-task{opacity:1;background:#fafaf9;border-color:#e0e2e4;}
+.task.done-task .pri-bar{opacity:0.25;}
+.task.done-task .task-title,.task.done-task .task-meta,.task.done-task .note-label,.task.done-task .srctag{opacity:0.4;}
+.task.done-task .task-title{text-decoration:line-through;}
+.day-item.done-task{opacity:1;background:#fafaf9;}
+.day-item.done-task .d-pri-bar{opacity:0.25;}
+.day-item.done-task .day-item-title,.day-item.done-task .day-item-meta{opacity:0.4;}
+.day-item.done-task .day-item-title{text-decoration:line-through;}
+.month-item.done-task{opacity:1;background:#fafaf9;border-color:#e0e2e4;}
+.month-item.done-task .m-pri-bar{opacity:0.25;}
+.month-item.done-task .month-item-title,.month-item.done-task .month-item-meta{opacity:0.4;}
+.month-item.done-task .month-item-title{text-decoration:line-through;}
 .pri-bar{width:4px;flex-shrink:0;align-self:stretch;}
 .pri-bar.high{background:var(--rdc-red-dark);}
 .pri-bar.medium{background:var(--amber);}
@@ -535,8 +546,8 @@ function renderDaily(){
       const done=ck.has(t.id);
       const pri=tp[t.id]||t.p||'low';
       const note=gn(t.id);
-      const el=document.createElement('div');el.className='day-item';el.id='di-'+t.id;
-      el.innerHTML='<div class="d-pri-bar '+pri+'"></div><div class="day-item-inner"><input type="checkbox" class="day-item-cb" '+(done?'ck':'')+' onchange="toggleDone(\''+t.id+'\',this,\'di\')" aria-label="Mark complete"><div class="day-item-body"><div style="display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap;">'+(t.rec?'<span style="font-size:12px;margin-top:1px" title="Recurring">&#11088;</span>':'')+'<span class="day-item-title'+(done?' done':'')+'" id="dt-'+t.id+'">'+esc(t.t||t.title)+'</span>'+mkSrcTag(t.src||t.source)+'</div><div class="day-item-meta">'+esc(t.m||t.meta||t.reason||'')+'</div><div class="note-label">note</div><div class="note-editable" contenteditable="true" data-ph="Add a note..." id="dn-'+t.id+'" onblur="noteBlur(\''+t.id+'\',this)">'+esc(note)+'</div></div></div><div class="day-item-actions"><span class="time-tag">'+esc(t.time||'')+'</span>'+mkSlackBtn(t.id,t.t||t.title||'',t.time||'')+(t._u?'<button class="tbtn" style="font-size:0.7rem;color:var(--cat-mgmt)" onclick="openEdit(\''+t.id+'\',\'daily\')">&#9998;</button>':'')+'</div>';
+      const el=document.createElement('div');el.className='day-item'+(done?' done-task':'');el.id='di-'+t.id;
+      el.innerHTML='<div class="d-pri-bar '+pri+'"></div><div class="day-item-inner"><input type="checkbox" class="day-item-cb" '+(done?'checked':'')+' onchange="toggleDone(\''+t.id+'\',this,\'di\')" aria-label="Mark complete"><div class="day-item-body"><div style="display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap;">'+(t.rec?'<span style="font-size:12px;margin-top:1px" title="Recurring">&#11088;</span>':'')+'<span class="day-item-title'+(done?' done':'')+'" id="dt-'+t.id+'">'+esc(t.t||t.title)+'</span>'+mkSrcTag(t.src||t.source)+'</div><div class="day-item-meta">'+esc(t.m||t.meta||t.reason||'')+'</div><div class="note-label">note</div><div class="note-editable" contenteditable="true" data-ph="Add a note..." id="dn-'+t.id+'" onblur="noteBlur(\''+t.id+'\',this)">'+esc(note)+'</div></div></div><div class="day-item-actions"><span class="time-tag">'+esc(t.time||'')+'</span>'+mkSlackBtn(t.id,t.t||t.title||'',t.time||'')+(t._u?'<button class="tbtn" style="font-size:0.7rem;color:var(--cat-mgmt)" onclick="openEdit(\''+t.id+'\',\'daily\')">&#9998;</button>':'')+'</div>';
       body.appendChild(el);
     });
     const ab=document.createElement('button');ab.className='add-btn';ab.innerHTML='<span>+</span> Add task for '+day.l;ab.onclick=()=>openDr('daily',{dk:day.k});body.appendChild(ab);
@@ -568,7 +579,7 @@ function renderWeekly(){
       const note=gn(task.id);
       const el=document.createElement('div');
       el.className='task'+(done?' done-task':'')+(task._u?' user-task':'');el.id='wi-'+task.id;
-      el.innerHTML='<div class="pri-bar '+pri+'"></div><div class="task-inner"><input type="checkbox" class="task-cb" '+(done?'ck':'')+' onchange="toggleDone(\''+task.id+'\',this,\'wi\')" aria-label="Mark complete"><div class="task-body"><div class="task-top">'+(task.rec?'<span class="recurring-star" title="Recurring">&#11088;</span>':'')+(task._u?'<span class="user-badge">mine</span>':'')+'<span class="task-title'+(done?' done':'')+'" id="wt-'+task.id+'">'+esc(task.t||task.title)+'</span>'+mkSrcTag(task.src||task.source)+'</div><div class="task-meta">'+esc(task.by||task.askedBy||'')+(task.when||task.timing?'<span class="sep">&middot;</span>'+esc(task.when||task.timing):'')+(task.why||task.reason?'<span class="sep">&middot;</span>'+esc(task.why||task.reason):'')+'</div><div class="note-label">note</div><div class="note-editable" contenteditable="true" data-ph="Add a note..." id="wn-'+task.id+'" onblur="noteBlur(\''+task.id+'\',this)">'+esc(note)+'</div><select class="p-select" id="wps-'+task.id+'" onchange="chgPri(\''+task.id+'\',this.value)"><option value="high" '+(pri==='high'?'selected':'')+'>&#128308; High</option><option value="medium" '+(pri==='medium'?'selected':'')+'>&#128993; Medium</option><option value="low" '+(pri==='low'?'selected':'')+'>&#128994; Low</option></select><div style="margin-top:5px">'+mkSlackBtn(task.id,task.t||task.title||'',task.when||task.timing||'')+'</div></div><div class="task-btns"><button class="tbtn" onclick="togPri(\''+task.id+'\',\'wps\')" title="Change priority">&#9873;</button>'+(task._u?'<button class="tbtn" style="color:var(--cat-mgmt)" onclick="openEdit(\''+task.id+'\',\'weekly\')" title="Edit">&#9998;</button>':'')+'</div></div>';
+      el.innerHTML='<div class="pri-bar '+pri+'"></div><div class="task-inner"><input type="checkbox" class="task-cb" '+(done?'checked':'')+' onchange="toggleDone(\''+task.id+'\',this,\'wi\')" aria-label="Mark complete"><div class="task-body"><div class="task-top">'+(task.rec?'<span class="recurring-star" title="Recurring">&#11088;</span>':'')+(task._u?'<span class="user-badge">mine</span>':'')+'<span class="task-title'+(done?' done':'')+'" id="wt-'+task.id+'">'+esc(task.t||task.title)+'</span>'+mkSrcTag(task.src||task.source)+'</div><div class="task-meta">'+esc(task.by||task.askedBy||'')+(task.when||task.timing?'<span class="sep">&middot;</span>'+esc(task.when||task.timing):'')+(task.why||task.reason?'<span class="sep">&middot;</span>'+esc(task.why||task.reason):'')+'</div><div class="note-label">note</div><div class="note-editable" contenteditable="true" data-ph="Add a note..." id="wn-'+task.id+'" onblur="noteBlur(\''+task.id+'\',this)">'+esc(note)+'</div><select class="p-select" id="wps-'+task.id+'" onchange="chgPri(\''+task.id+'\',this.value)"><option value="high" '+(pri==='high'?'selected':'')+'>&#128308; High</option><option value="medium" '+(pri==='medium'?'selected':'')+'>&#128993; Medium</option><option value="low" '+(pri==='low'?'selected':'')+'>&#128994; Low</option></select><div style="margin-top:5px">'+mkSlackBtn(task.id,task.t||task.title||'',task.when||task.timing||'')+'</div></div><div class="task-btns"><button class="tbtn" onclick="togPri(\''+task.id+'\',\'wps\')" title="Change priority">&#9873;</button>'+(task._u?'<button class="tbtn" style="color:var(--cat-mgmt)" onclick="openEdit(\''+task.id+'\',\'weekly\')" title="Edit">&#9998;</button>':'')+'</div></div>';
       block.appendChild(el);
     });
     const ab=document.createElement('button');ab.className='add-btn';ab.innerHTML='<span>+</span> Add task to '+esc(cat);ab.onclick=()=>openDr('weekly',{cat});block.appendChild(ab);
@@ -586,8 +597,8 @@ function renderMonthly(){
     sec.innerHTML='<div class="month-sec-title">'+esc(grp)+'</div>';
     all.filter(t=>(t.g||t.group)===grp).forEach(t=>{
       const done=ck.has(t.id);const note=gn(t.id);const urg=t.u||t.urgency||'horizon';
-      const el=document.createElement('div');el.className='month-item'+(t._u?' user-task':'');el.id='mi-'+t.id;
-      el.innerHTML='<div class="m-pri-bar '+urg+'"></div><div class="month-item-inner"><input type="checkbox" class="month-item-cb" '+(done?'ck':'')+' onchange="toggleDone(\''+t.id+'\',this,\'mi\')" aria-label="Mark complete"><div class="month-item-body"><div style="display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap;">'+(t._u?'<span class="user-badge">mine</span>':'')+'<span class="month-item-title'+(done?' done':'')+'" id="mt-'+t.id+'">'+esc(t.t||t.title)+'</span>'+mkSrcTag(t.src||t.source)+'</div><div class="month-item-meta">'+esc(t.m||t.meta||'')+'</div><div class="note-label">note</div><div class="note-editable" contenteditable="true" data-ph="Add a note..." id="mn-'+t.id+'" onblur="noteBlur(\''+t.id+'\',this)">'+esc(note)+'</div></div></div><div class="month-item-right"><span class="deadline-badge '+urg+'">'+esc(t.d||t.deadline||'')+'</span>'+mkSlackBtn(t.id,t.t||t.title||'',t.d||t.deadline||'')+(t._u?'<button class="tbtn" style="color:var(--cat-mgmt);font-size:0.7rem" onclick="openEdit(\''+t.id+'\',\'monthly\')">&#9998;</button>':'')+'</div>';
+      const el=document.createElement('div');el.className='month-item'+(done?' done-task':'')+(t._u?' user-task':'');el.id='mi-'+t.id;
+      el.innerHTML='<div class="m-pri-bar '+urg+'"></div><div class="month-item-inner"><input type="checkbox" class="month-item-cb" '+(done?'checked':'')+' onchange="toggleDone(\''+t.id+'\',this,\'mi\')" aria-label="Mark complete"><div class="month-item-body"><div style="display:flex;align-items:flex-start;gap:5px;flex-wrap:wrap;">'+(t._u?'<span class="user-badge">mine</span>':'')+'<span class="month-item-title'+(done?' done':'')+'" id="mt-'+t.id+'">'+esc(t.t||t.title)+'</span>'+mkSrcTag(t.src||t.source)+'</div><div class="month-item-meta">'+esc(t.m||t.meta||'')+'</div><div class="note-label">note</div><div class="note-editable" contenteditable="true" data-ph="Add a note..." id="mn-'+t.id+'" onblur="noteBlur(\''+t.id+'\',this)">'+esc(note)+'</div></div></div><div class="month-item-right"><span class="deadline-badge '+urg+'">'+esc(t.d||t.deadline||'')+'</span>'+mkSlackBtn(t.id,t.t||t.title||'',t.d||t.deadline||'')+(t._u?'<button class="tbtn" style="color:var(--cat-mgmt);font-size:0.7rem" onclick="openEdit(\''+t.id+'\',\'monthly\')">&#9998;</button>':'')+'</div>';
       sec.appendChild(el);
     });
     const ab=document.createElement('button');ab.className='add-btn';ab.innerHTML='<span>+</span> Add item to '+esc(grp);ab.onclick=()=>openDr('monthly',{grp});sec.appendChild(ab);
@@ -600,16 +611,31 @@ function renderMonthly(){
 
 function td(id,cb,pfx){toggleDone(id,cb,pfx);}
 function toggleDone(id,cb,pfx){
-  if(cb.ck)ck.add(id);else ck.delete(id);
-  const cls=pfx==='wi'?'task-title':pfx==='di'?'day-item-title':'month-item-title';
-  const el=document.getElementById((pfx==='di'?'dt-':pfx==='wi'?'wt-':'mt-')+id);
-  if(el)el.className=cls+(cb.ck?' done':'');
-  const card=document.getElementById((pfx==='wi'?'wi-':'mi-')+id);
-  if(card&&pfx==='wi')card.className='task'+(cb.ck?' done-task':'')+(card.className.includes('user-task')?' user-task':'');
+  var isDone=cb.checked;
+  if(isDone)ck.add(id);else ck.delete(id);
+  var titleId=(pfx==='di'?'dt-':pfx==='wi'?'wt-':'mt-')+id;
+  var titleEl=document.getElementById(titleId);
+  var titleCls=pfx==='wi'?'task-title':pfx==='di'?'day-item-title':'month-item-title';
+  if(titleEl)titleEl.className=titleCls+(isDone?' done':'');
+  var cardId=(pfx==='wi'?'wi-':pfx==='di'?'di-':'mi-')+id;
+  var cardEl=document.getElementById(cardId);
+  if(cardEl){
+    var baseCls=pfx==='wi'?'task':pfx==='di'?'day-item':'month-item';
+    var hasUser=cardEl.className.indexOf('user-task')>-1;
+    cardEl.className=baseCls+(isDone?' done-task':'')+(hasUser?' user-task':'');
+    cardEl.querySelectorAll('.note-editable').forEach(function(el){
+      el.contentEditable=isDone?'false':'true';
+      el.style.pointerEvents=isDone?'none':'auto';
+    });
+    cardEl.querySelectorAll('.slack-btn,.tbtn,.p-select').forEach(function(el){
+      el.disabled=isDone;
+      el.style.pointerEvents=isDone?'none':'auto';
+    });
+  }
   save();updHdr();
 }
 function togPri(id,sid){const s=document.getElementById(sid+'-'+id);if(s)s.style.display=s.style.display==='block'?'none':'block';}
-function chgPri(id,val){tp[id]=val;const ut=ut.find(t=>t.id===id);if(ut)ut.priority=val;document.getElementById('wps-'+id).style.display='none';save();renderWeekly();}
+function chgPri(id,val){tp[id]=val;const utask=ut.find(t=>t.id===id);if(utask)utask.priority=val;document.getElementById('wps-'+id).style.display='none';save();renderWeekly();}
 
 // ── DRAWER ─────────────────────────────────────────────────────────────────
 function openDr(view,def={}){
