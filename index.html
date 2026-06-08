@@ -76,18 +76,28 @@ body{font-family:var(--font);background:var(--rdc-gray);color:var(--rdc-text);mi
 .task-block{margin-bottom:2rem;}
 .task{display:flex;border-radius:var(--radius);border:1px solid var(--rdc-gray2);background:var(--rdc-white);margin-bottom:6px;transition:border-color 0.15s,box-shadow 0.15s;box-shadow:var(--shadow);overflow:hidden;}
 .task:hover{border-color:var(--rdc-gray3);box-shadow:var(--shadow-md);}
-.task.done-task{opacity:1;background:#fafaf9;border-color:#e0e2e4;}
-.task.done-task .pri-bar{opacity:0.25;}
-.task.done-task .task-title,.task.done-task .task-meta,.task.done-task .note-label,.task.done-task .srctag{opacity:0.4;}
-.task.done-task .task-title{text-decoration:line-through;}
-.day-item.done-task{opacity:1;background:#fafaf9;}
-.day-item.done-task .d-pri-bar{opacity:0.25;}
-.day-item.done-task .day-item-title,.day-item.done-task .day-item-meta{opacity:0.4;}
-.day-item.done-task .day-item-title{text-decoration:line-through;}
-.month-item.done-task{opacity:1;background:#fafaf9;border-color:#e0e2e4;}
-.month-item.done-task .m-pri-bar{opacity:0.25;}
-.month-item.done-task .month-item-title,.month-item.done-task .month-item-meta{opacity:0.4;}
-.month-item.done-task .month-item-title{text-decoration:line-through;}
+.task.done-task,
+.day-item.done-task,
+.month-item.done-task{
+  background:#f7f8f8;
+  border-color:#dde0e3;
+}
+.task.done-task > *,
+.day-item.done-task > *,
+.month-item.done-task > *{
+  opacity:0.45;
+  pointer-events:none;
+}
+.task.done-task input[type=checkbox],
+.day-item.done-task input[type=checkbox],
+.month-item.done-task input[type=checkbox]{
+  opacity:1;
+  pointer-events:auto;
+}
+.done{
+  text-decoration:line-through !important;
+  color:var(--rdc-text3) !important;
+}
 .pri-bar{width:4px;flex-shrink:0;align-self:stretch;}
 .pri-bar.high{background:var(--rdc-red-dark);}
 .pri-bar.medium{background:var(--amber);}
@@ -236,11 +246,21 @@ body{font-family:var(--font);background:var(--rdc-gray);color:var(--rdc-text);mi
 .note-edit-area{width:100%;padding:8px 10px;font-size:0.84rem;font-family:var(--font);border:1px solid var(--rdc-gray2);border-radius:var(--radius);background:var(--rdc-gray);color:var(--rdc-text);outline:none;resize:vertical;min-height:80px;line-height:1.5;display:none;}
 .add-note-row{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px dashed var(--rdc-gray3);border-radius:var(--radius);background:var(--rdc-gray);}
 .add-note-title-input{width:100%;padding:6px 8px;font-size:0.78rem;font-family:var(--mono);border:1px solid var(--rdc-gray2);border-radius:var(--radius);background:var(--rdc-white);color:var(--rdc-text);outline:none;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--rdc-navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:0.78rem;font-family:var(--mono);display:none;border-left:3px solid var(--rdc-red);box-shadow:0 4px 16px rgba(0,0,0,0.18);z-index:999;white-space:nowrap;opacity:0;transition:opacity 0.18s,transform 0.18s;}
+.toast.show{display:flex;align-items:center;gap:10px;opacity:1;transform:translateX(-50%) translateY(0);}
+.toast-msg{flex:1;}
+.toast-undo{background:none;border:1px solid rgba(255,255,255,0.35);color:#fff;border-radius:6px;padding:3px 10px;font-size:0.72rem;font-family:var(--mono);cursor:pointer;transition:background 0.12s;white-space:nowrap;}
+.toast-undo:hover{background:rgba(255,255,255,0.15);}
+.toast-bar{height:2px;background:var(--rdc-red);border-radius:1px;position:absolute;bottom:0;left:0;transition:width linear;}
 </style>
 </head>
 <body>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast-msg" id="toastMsg"></span>
+  <button class="toast-undo" id="toastUndo" onclick="doUndo()" style="display:none">Undo</button>
+  <div class="toast-bar" id="toastBar" style="width:100%"></div>
+</div>
 
 <div class="site-header">
   <div>
@@ -498,11 +518,7 @@ function remind(id,title,timing,ev){
     toast('Open Slack and paste: <strong>/remind me "'+esc(title.slice(0,40))+'"</strong>');
   });
 }
-function toast(html){
-  const t=document.getElementById('toast');
-  t.innerHTML=html; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),4200);
-}
+function toast(msg){showToast(msg,false);setTimeout(hideToast,3000);}
 
 function updHdr(){
   document.getElementById('doneCount').textContent=ck.size;
@@ -610,29 +626,88 @@ function renderMonthly(){
 // ── INTERACTIONS ───────────────────────────────────────────────────────────
 
 function td(id,cb,pfx){toggleDone(id,cb,pfx);}
+// ── UNDO SYSTEM ───────────────────────────────────────────────────────────
+var _undoPending=null; // {id, wasDone, title, timer, barTimer}
+
 function toggleDone(id,cb,pfx){
   var isDone=cb.checked;
-  if(isDone)ck.add(id);else ck.delete(id);
-  var titleId=(pfx==='di'?'dt-':pfx==='wi'?'wt-':'mt-')+id;
-  var titleEl=document.getElementById(titleId);
-  var titleCls=pfx==='wi'?'task-title':pfx==='di'?'day-item-title':'month-item-title';
-  if(titleEl)titleEl.className=titleCls+(isDone?' done':'');
-  var cardId=(pfx==='wi'?'wi-':pfx==='di'?'di-':'mi-')+id;
-  var cardEl=document.getElementById(cardId);
-  if(cardEl){
-    var baseCls=pfx==='wi'?'task':pfx==='di'?'day-item':'month-item';
-    var hasUser=cardEl.className.indexOf('user-task')>-1;
-    cardEl.className=baseCls+(isDone?' done-task':'')+(hasUser?' user-task':'');
-    cardEl.querySelectorAll('.note-editable').forEach(function(el){
-      el.contentEditable=isDone?'false':'true';
-      el.style.pointerEvents=isDone?'none':'auto';
-    });
-    cardEl.querySelectorAll('.slack-btn,.tbtn,.p-select').forEach(function(el){
-      el.disabled=isDone;
-      el.style.pointerEvents=isDone?'none':'auto';
-    });
+  // Find task title for the toast
+  var allTasks=[].concat(WT,DT,MT,ut);
+  var task=allTasks.find(function(t){return t.id===id;});
+  var title=task?(task.t||task.title||'Task'):'Task';
+
+  // Cancel any pending undo for a different task
+  if(_undoPending&&_undoPending.id!==id){
+    clearTimeout(_undoPending.timer);
+    clearInterval(_undoPending.barTimer);
+    commitUndo();
   }
-  save();updHdr();
+
+  if(isDone)ck.add(id);else ck.delete(id);
+  save();
+  updHdr();
+  renderAll();
+
+  // Show undo toast
+  var duration=5000;
+  var started=Date.now();
+  var barEl=document.getElementById('toastBar');
+  var undoBtn=document.getElementById('toastUndo');
+
+  showToast((isDone?'Completed: ':'Unchecked: ')+title.slice(0,44)+(title.length>44?'...':''), true);
+
+  if(barEl)barEl.style.width='100%';
+  if(undoBtn)undoBtn.style.display='block';
+
+  var barInterval=setInterval(function(){
+    var elapsed=Date.now()-started;
+    var pct=Math.max(0,100-(elapsed/duration*100));
+    if(barEl)barEl.style.width=pct+'%';
+    if(elapsed>=duration)clearInterval(barInterval);
+  },50);
+
+  var timer=setTimeout(function(){
+    clearInterval(barInterval);
+    _undoPending=null;
+    hideToast();
+  },duration);
+
+  _undoPending={id:id,wasDone:isDone,title:title,timer:timer,barTimer:barInterval};
+}
+
+function doUndo(){
+  if(!_undoPending)return;
+  clearTimeout(_undoPending.timer);
+  clearInterval(_undoPending.barTimer);
+  var id=_undoPending.id;
+  var wasDone=_undoPending.wasDone;
+  // Reverse the action
+  if(wasDone)ck.delete(id);else ck.add(id);
+  save();updHdr();renderAll();
+  _undoPending=null;
+  showToast('Undone.',false);
+  setTimeout(hideToast,1400);
+}
+
+function commitUndo(){
+  // Called when a new action replaces the pending undo — just close toast silently
+  hideToast();
+  _undoPending=null;
+}
+
+function showToast(msg,withUndo){
+  var el=document.getElementById('toast');
+  var msgEl=document.getElementById('toastMsg');
+  var undoBtn=document.getElementById('toastUndo');
+  if(!el)return;
+  if(msgEl)msgEl.textContent=msg;
+  if(undoBtn)undoBtn.style.display=withUndo?'block':'none';
+  el.className='toast show';
+}
+
+function hideToast(){
+  var el=document.getElementById('toast');
+  if(el)el.className='toast';
 }
 function togPri(id,sid){const s=document.getElementById(sid+'-'+id);if(s)s.style.display=s.style.display==='block'?'none':'block';}
 function chgPri(id,val){tp[id]=val;const utask=ut.find(t=>t.id===id);if(utask)utask.priority=val;document.getElementById('wps-'+id).style.display='none';save();renderWeekly();}
