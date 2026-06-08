@@ -252,6 +252,30 @@ body{font-family:var(--font);background:var(--rdc-gray);color:var(--rdc-text);mi
 .toast-undo{background:rgba(255,255,255,0.14);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:6px;padding:7px 20px;font-size:0.78rem;font-family:var(--mono);cursor:pointer;white-space:nowrap;justify-self:end;}
 .toast-undo:hover{background:rgba(255,255,255,0.28);}
 .toast-bar{grid-column:1/-1;height:3px;background:var(--rdc-red);border-radius:2px;width:100%;}
+
+/* ── GitHub Deploy FAB ─────────────────────────────────── */
+#ghFab{position:fixed;bottom:24px;right:24px;z-index:500;display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+#ghFabBtn{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;border:none;cursor:pointer;font-family:var(--mono);font-size:0.75rem;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.18);transition:all 0.2s;white-space:nowrap;}
+#ghFabBtn.idle{background:var(--rdc-navy);color:#fff;}
+#ghFabBtn.idle:hover{background:#2a2a2a;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,0,0,0.22);}
+#ghFabBtn.deploying{background:#185FA5;color:#fff;cursor:not-allowed;}
+#ghFabBtn.success{background:#1A7A5E;color:#fff;}
+#ghFabBtn.error{background:#A32D2D;color:#fff;}
+#ghPanel{background:var(--rdc-white);border:1px solid var(--rdc-gray2);border-radius:12px;padding:16px;width:280px;box-shadow:0 8px 32px rgba(0,0,0,0.14);display:none;flex-direction:column;gap:10px;}
+#ghPanel.open{display:flex;}
+#ghPanel label{font-size:0.65rem;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.07em;color:var(--rdc-text3);display:block;margin-bottom:3px;}
+#ghPanel input{width:100%;padding:7px 9px;font-size:0.78rem;font-family:var(--mono);border:1px solid var(--rdc-gray2);border-radius:8px;background:var(--rdc-gray);color:var(--rdc-text);outline:none;transition:border-color 0.15s;}
+#ghPanel input:focus{border-color:var(--rdc-navy);background:#fff;}
+#ghPanelDeploy{width:100%;padding:9px;background:var(--rdc-red);color:#fff;border:none;border-radius:8px;font-family:var(--mono);font-size:0.78rem;font-weight:500;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+#ghPanelDeploy:hover{background:var(--rdc-red-dark);}
+#ghPanelDeploy:disabled{opacity:0.5;cursor:not-allowed;}
+#ghLog{font-size:0.68rem;font-family:var(--mono);color:var(--rdc-text3);line-height:1.5;max-height:70px;overflow-y:auto;display:none;}
+#ghLog.visible{display:block;}
+.gh-spin{width:12px;height:12px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:ghspin 0.7s linear infinite;display:inline-block;}
+@keyframes ghspin{to{transform:rotate(360deg);}}
+#ghFabClose{background:none;border:none;cursor:pointer;color:var(--rdc-text3);font-size:1rem;padding:0;line-height:1;align-self:flex-end;}
+#ghFabClose:hover{color:var(--rdc-text);}
+#ghTokenNote{font-size:0.62rem;color:var(--rdc-text3);font-family:var(--mono);line-height:1.4;}
 </style>
 </head>
 <body>
@@ -881,5 +905,153 @@ renderNotes();
     <div class="toast-bar" id="toastBar"></div>
   </div>
 </div>
+<!-- ── GitHub Deploy FAB ──────────────────────────────────────────── -->
+<div id="ghFab">
+  <div id="ghPanel">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:0.78rem;font-weight:500;color:var(--rdc-text);font-family:var(--mono);">&#9651; Deploy to GitHub</span>
+      <button id="ghFabClose" onclick="ghTogglePanel()" aria-label="Close">&#10005;</button>
+    </div>
+    <div>
+      <label for="ghToken">Personal access token</label>
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx" oninput="ghSaveToken()" />
+    </div>
+    <div>
+      <label for="ghOwner">GitHub username</label>
+      <input type="text" id="ghOwner" value="mirellasmartt-netizen" placeholder="username" />
+    </div>
+    <div>
+      <label for="ghMsg">Commit message</label>
+      <input type="text" id="ghMsg" placeholder="Update Priorities — June 2026" />
+    </div>
+    <div id="ghLog"></div>
+    <div id="ghTokenNote">&#128274; Token stays in your browser only — never stored or sent except to GitHub's API.</div>
+    <button id="ghPanelDeploy" onclick="ghDeploy()">&#8679; Commit &amp; deploy</button>
+  </div>
+  <button id="ghFabBtn" class="idle" onclick="ghTogglePanel()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.258.82-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+    <span id="ghFabLabel">Deploy</span>
+  </button>
+</div>
+
+<script>
+(function(){
+  var REPO='Priorities', OWNER_DEFAULT='mirellasmartt-netizen', FILE='index.html';
+  var panelOpen=false;
+
+  // Restore token from localStorage — persists across sessions in this browser
+  var storedToken=localStorage.getItem('gh_deploy_token')||'';
+  if(storedToken){var el=document.getElementById('ghToken');if(el)el.value=storedToken;}
+
+  // Auto-set commit message
+  var msgEl=document.getElementById('ghMsg');
+  if(msgEl&&!msgEl.value){
+    var d=new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    msgEl.value='Update Priorities \u2014 '+d;
+  }
+
+  window.ghSaveToken=function(){
+    var v=document.getElementById('ghToken').value;
+    localStorage.setItem('gh_deploy_token',v);
+  };
+
+  window.ghTogglePanel=function(){
+    panelOpen=!panelOpen;
+    var p=document.getElementById('ghPanel');
+    if(panelOpen){p.classList.add('open');document.getElementById('ghToken').focus();}
+    else p.classList.remove('open');
+  };
+
+  var logLines=[];
+  function ghLog(msg,type){
+    var el=document.getElementById('ghLog');
+    el.classList.add('visible');
+    var color=type==='ok'?'var(--teal)':type==='err'?'var(--rdc-red)':'var(--rdc-text3)';
+    logLines.push('<span style="color:'+color+'">'+msg+'</span>');
+    el.innerHTML=logLines.join('<br>');
+    el.scrollTop=el.scrollHeight;
+  }
+
+  function setFab(state,label){
+    var btn=document.getElementById('ghFabBtn');
+    var lbl=document.getElementById('ghFabLabel');
+    btn.className=state;
+    if(lbl)lbl.textContent=label;
+  }
+
+  window.ghDeploy=async function(){
+    var token=document.getElementById('ghToken').value.trim();
+    var owner=document.getElementById('ghOwner').value.trim();
+    var commitMsg=document.getElementById('ghMsg').value.trim();
+
+    if(!token){ghLog('&#9888; Token required','err');return;}
+    if(!commitMsg){ghLog('&#9888; Commit message required','err');return;}
+
+    logLines=[];
+    var deployBtn=document.getElementById('ghPanelDeploy');
+    deployBtn.disabled=true;
+    deployBtn.innerHTML='<span class="gh-spin"></span> Deploying\u2026';
+    setFab('deploying','Deploying\u2026');
+
+    var headers={
+      'Authorization':'Bearer '+token,
+      'Accept':'application/vnd.github+json',
+      'X-GitHub-Api-Version':'2022-11-28',
+      'Content-Type':'application/json'
+    };
+
+    try{
+      ghLog('Connecting to '+owner+'/'+REPO+'\u2026');
+      var rr=await fetch('https://api.github.com/repos/'+owner+'/'+REPO,{headers:headers});
+      if(!rr.ok){var e=await rr.json();throw new Error('Repo error: '+e.message);}
+      ghLog('Repo confirmed \u2713','ok');
+
+      ghLog('Fetching current file SHA\u2026');
+      var fr=await fetch('https://api.github.com/repos/'+owner+'/'+REPO+'/contents/'+FILE,{headers:headers});
+      var sha=null;
+      if(fr.ok){sha=(await fr.json()).sha;ghLog('SHA: '+sha.slice(0,7)+'\u2026 \u2713','ok');}
+      else if(fr.status===404){ghLog('Creating new file\u2026');}
+      else throw new Error('File fetch failed: '+fr.status);
+
+      ghLog('Encoding page\u2026');
+      var html=document.documentElement.outerHTML;
+      var encoded=btoa(unescape(encodeURIComponent(html)));
+
+      var body={message:commitMsg,content:encoded};
+      if(sha)body.sha=sha;
+
+      ghLog('Committing\u2026');
+      var pr=await fetch('https://api.github.com/repos/'+owner+'/'+REPO+'/contents/'+FILE,{
+        method:'PUT',headers:headers,body:JSON.stringify(body)
+      });
+      if(!pr.ok){var e2=await pr.json();throw new Error('Commit failed: '+e2.message);}
+      var result=await pr.json();
+      ghLog('Committed: '+result.commit.sha.slice(0,7)+' \u2713','ok');
+      ghLog('Live in ~30\u201360s \u2713','ok');
+
+      setFab('success','\u2713 Deployed');
+      deployBtn.innerHTML='&#10003; Deployed!';
+      deployBtn.style.background='var(--teal)';
+      setTimeout(function(){
+        deployBtn.disabled=false;
+        deployBtn.innerHTML='&#8679; Commit &amp; deploy';
+        deployBtn.style.background='';
+        setFab('idle','Deploy');
+        logLines=[];
+        document.getElementById('ghLog').classList.remove('visible');
+        document.getElementById('ghLog').innerHTML='';
+        document.getElementById('ghPanel').classList.remove('open');
+        panelOpen=false;
+      },4000);
+
+    }catch(err){
+      ghLog('Error: '+err.message,'err');
+      setFab('error','Failed');
+      deployBtn.disabled=false;
+      deployBtn.innerHTML='&#8679; Retry deploy';
+      setTimeout(function(){setFab('idle','Deploy');},5000);
+    }
+  };
+})();
+</script>
 </body>
-</html>
